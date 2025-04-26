@@ -1,0 +1,118 @@
+{
+  "foods": [
+    {
+      "id": "1",
+      "name": "Mercimek Çorbası",
+      "description": "Geleneksel Türk mutfağının vazgeçilmez çorbası",
+      "ingredients": [
+        "Kırmızı mercimek",
+        "Soğan",
+        "Havuç",
+        "Patates",
+        "Zeytinyağı",
+        "Tuz",
+        "Karabiber"
+      ],
+      "category": "Çorba",
+      "culture": "Türk",
+      "mealType": "Öğle Yemeği",
+      "isQuick": true,
+      "isHealthy": true,
+      "isHighProtein": true,
+      "isLowCalorie": true,
+      "preparationTime": 30,
+      "calories": 150,
+      "imageUrl": ""
+    },
+    {
+      "id": "2",
+      "name": "Izgara Tavuk Salata",
+      "description": "Sağlıklı ve protein açısından zengin salata",
+      "ingredients": [
+        "Tavuk göğsü",
+        "Marul",
+        "Domates",
+        "Salatalık",
+        "Zeytinyağı",
+        "Limon",
+        "Tuz",
+        "Karabiber"
+      ],
+      "category": "Ana Yemek",
+      "culture": "",
+      "mealType": "Öğle Yemeği",
+      "isQuick": true,
+      "isHealthy": true,
+      "isHighProtein": true,
+      "isLowCalorie": true,
+      "preparationTime": 20,
+      "calories": 300,
+      "imageUrl": ""
+    },
+    {
+      "id": "3",
+      "name": "Mantı",
+      "description": "Geleneksel Türk mutfağının sevilen hamur işi",
+      "ingredients": [
+        "Un",
+        "Yumurta",
+        "Kıyma",
+        "Soğan",
+        "Yoğurt",
+        "Domates sosu",
+        "Tuz",
+        "Karabiber"
+      ],
+      "category": "Ana Yemek",
+      "culture": "Türk",
+      "mealType": "Akşam Yemeği",
+      "isQuick": false,
+      "isHealthy": false,
+      "isHighProtein": true,
+      "isLowCalorie": false,
+      "preparationTime": 90,
+      "calories": 500,
+      "imageUrl": ""
+    },
+    {
+      "id": "4",
+      "name": "Protein Smoothie",
+      "description": "Antrenman sonrası için ideal protein shake",
+      "ingredients": ["Muz", "Protein tozu", "Süt", "Yulaf", "Bal", "Tarçın"],
+      "category": "İçecek",
+      "culture": "",
+      "mealType": "Atıştırmalık",
+      "isQuick": true,
+      "isHealthy": true,
+      "isHighProtein": true,
+      "isLowCalorie": true,
+      "preparationTime": 5,
+      "calories": 250,
+      "imageUrl": ""
+    },
+    {
+      "id": "5",
+      "name": "Menemen",
+      "description": "Klasik Türk kahvaltısı",
+      "ingredients": [
+        "Yumurta",
+        "Domates",
+        "Biber",
+        "Soğan",
+        "Zeytinyağı",
+        "Tuz",
+        "Karabiber"
+      ],
+      "category": "Kahvaltı",
+      "culture": "Türk",
+      "mealType": "Kahvaltı",
+      "isQuick": true,
+      "isHealthy": true,
+      "isHighProtein": true,
+      "isLowCalorie": true,
+      "preparationTime": 15,
+      "calories": 200,
+      "imageUrl": ""
+    }
+  ]
+}
