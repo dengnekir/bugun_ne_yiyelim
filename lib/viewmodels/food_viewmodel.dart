@@ -6,11 +6,12 @@ import 'package:bugun_ne_yiyelim/models/food.dart';
 import 'package:bugun_ne_yiyelim/constants/app_constants.dart';
 
 class FoodViewModel extends ChangeNotifier {
-  List<Food> _allFoods = [];
+  final List<Food> _foods = [];
   List<Food> _filteredFoods = [];
+  final Random _random = Random();
   bool _isLoading = true;
 
-  List<Food> get allFoods => _allFoods;
+  List<Food> get foods => _foods;
   List<Food> get filteredFoods => _filteredFoods;
   bool get isLoading => _isLoading;
 
@@ -25,8 +26,14 @@ class FoodViewModel extends ChangeNotifier {
       final Map<String, dynamic> jsonData = json.decode(jsonString);
       final List<dynamic> foodList = jsonData['foods'];
 
-      _allFoods = foodList.map((json) => Food.fromJson(json)).toList();
-      _filteredFoods = List.from(_allFoods);
+      _foods.addAll(foodList.map((json) => Food.fromJson(json)));
+      _filteredFoods = List.from(_foods);
+
+      debugPrint('Yüklenen yemek sayısı: ${_foods.length}');
+      for (var food in _foods) {
+        debugPrint(
+            'Yemek: ${food.name}, Mode: ${food.mode}, MealType: ${food.mealType}, Environment: ${food.environment}');
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -37,38 +44,77 @@ class FoodViewModel extends ChangeNotifier {
     }
   }
 
-  void filterFoods({
+  List<Food> filterFoods({
     required String environment,
     required String mealType,
     required String mode,
   }) {
-    _filteredFoods = _allFoods.where((food) {
-      bool matchesMode = true;
-      switch (mode) {
-        case AppConstants.modeSports:
-          matchesMode = food.isHighProtein;
-          break;
-        case AppConstants.modeDiet:
-          matchesMode = food.isLowCalorie;
-          break;
-        case AppConstants.modeCulture:
-          matchesMode = food.culture.isNotEmpty;
-          break;
-      }
+    print('Filtreleme başlıyor:');
+    print('Seçilen ortam: $environment');
+    print('Seçilen öğün: $mealType');
+    print('Seçilen mod: $mode');
 
-      return matchesMode && food.mealType == mealType;
+    if (_foods.isEmpty) {
+      print('Yemek listesi boş!');
+      return [];
+    }
+
+    print('Toplam yemek sayısı: ${_foods.length}');
+
+    final filteredFoods = _foods.where((food) {
+      final bool environmentMatch = food.environment == environment;
+      final bool mealTypeMatch = food.mealType == mealType;
+      final bool modeMatch = food.mode == mode;
+
+      print('Yemek: ${food.name}');
+      print(
+          'Ortam eşleşmesi: $environmentMatch (${food.environment} == $environment)');
+      print('Öğün eşleşmesi: $mealTypeMatch (${food.mealType} == $mealType)');
+      print('Mod eşleşmesi: $modeMatch (${food.mode} == $mode)');
+
+      return environmentMatch && mealTypeMatch && modeMatch;
     }).toList();
 
-    notifyListeners();
-  }
+    print('Filtrelenmiş yemek sayısı: ${filteredFoods.length}');
+    if (filteredFoods.isNotEmpty) {
+      print('Filtrelenmiş yemekler:');
+      for (var food in filteredFoods) {
+        print('- ${food.name}');
+      }
+    }
 
-  List<Food> getFavorites(List<String> favoriteIds) {
-    return _allFoods.where((food) => favoriteIds.contains(food.id)).toList();
+    return filteredFoods;
   }
 
   Food? getRandomFood() {
-    if (_filteredFoods.isEmpty) return null;
-    final random = Random();
-    return _filteredFoods[random.nextInt(_filteredFoods.length)];
+    if (_filteredFoods.isEmpty) {
+      debugPrint('Filtrelenmiş yemek listesi boş!');
+      return null;
+    }
+    final selectedFood = _filteredFoods[_random.nextInt(_filteredFoods.length)];
+    debugPrint('Seçilen yemek: ${selectedFood.name}');
+    return selectedFood;
+  }
+
+  List<Food> getFavoriteFoods(Set<String> favoriteIds) {
+    return _foods.where((food) => favoriteIds.contains(food.id)).toList();
+  }
+
+  void addFood(Food food) {
+    _foods.add(food);
+    notifyListeners();
+  }
+
+  void removeFood(String foodId) {
+    _foods.removeWhere((food) => food.id == foodId);
+    notifyListeners();
+  }
+
+  void updateFood(Food food) {
+    final index = _foods.indexWhere((f) => f.id == food.id);
+    if (index != -1) {
+      _foods[index] = food;
+      notifyListeners();
+    }
   }
 }

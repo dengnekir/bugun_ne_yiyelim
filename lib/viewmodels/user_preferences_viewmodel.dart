@@ -8,13 +8,16 @@ class UserPreferencesViewModel extends ChangeNotifier {
   late SharedPreferences _prefs;
   UserPreferences? _userPreferences;
   bool _isLoading = true;
+  final Set<String> _favoriteFoodIds = {};
 
   UserPreferences? get userPreferences => _userPreferences;
   bool get isLoading => _isLoading;
+  Set<String> get favoriteFoodIds => _favoriteFoodIds;
 
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     _loadPreferences();
+    _loadFavorites();
   }
 
   void _loadPreferences() {
@@ -63,26 +66,27 @@ class UserPreferencesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleFavorite(String foodId) async {
-    if (_userPreferences == null) return;
-
-    List<String> updatedFavorites =
-        List.from(_userPreferences!.favoriteFoodIds);
-    if (updatedFavorites.contains(foodId)) {
-      updatedFavorites.remove(foodId);
-    } else {
-      updatedFavorites.add(foodId);
-    }
-
-    _userPreferences = _userPreferences!.copyWith(
-      favoriteFoodIds: updatedFavorites,
-    );
-
-    await _savePreferences();
+  void _loadFavorites() {
+    final favorites = _prefs.getStringList('favorites') ?? [];
+    _favoriteFoodIds.addAll(favorites);
     notifyListeners();
   }
 
+  void _saveFavorites() {
+    _prefs.setStringList('favorites', _favoriteFoodIds.toList());
+  }
+
   bool isFavorite(String foodId) {
-    return _userPreferences?.favoriteFoodIds.contains(foodId) ?? false;
+    return _favoriteFoodIds.contains(foodId);
+  }
+
+  void toggleFavorite(String foodId) {
+    if (_favoriteFoodIds.contains(foodId)) {
+      _favoriteFoodIds.remove(foodId);
+    } else {
+      _favoriteFoodIds.add(foodId);
+    }
+    _saveFavorites();
+    notifyListeners();
   }
 }

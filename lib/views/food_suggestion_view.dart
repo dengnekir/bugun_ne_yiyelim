@@ -7,6 +7,8 @@ import 'package:bugun_ne_yiyelim/viewmodels/user_preferences_viewmodel.dart';
 import 'package:bugun_ne_yiyelim/viewmodels/food_viewmodel.dart';
 import 'package:bugun_ne_yiyelim/models/food.dart';
 import 'package:bugun_ne_yiyelim/viewmodels/theme_viewmodel.dart';
+import 'package:bugun_ne_yiyelim/views/food_detail_view.dart';
+import 'package:bugun_ne_yiyelim/views/food_dice_view.dart';
 
 class FoodSuggestionView extends StatefulWidget {
   const FoodSuggestionView({super.key});
@@ -679,7 +681,20 @@ class _FoodSuggestionViewState extends State<FoodSuggestionView>
               ),
             ),
             SizedBox(height: 24.h),
-            _buildSuggestButton(),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    onPressed: _suggestFood,
+                    icon: Icons.restaurant_menu,
+                    label: 'Yemek Öner',
+                    color: _currentModeColor,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                _buildDiceButton(),
+              ],
+            ),
           ],
         ),
       ),
@@ -938,9 +953,7 @@ class _FoodSuggestionViewState extends State<FoodSuggestionView>
                       children: [
                         Expanded(
                           child: _buildActionButton(
-                            onPressed: () {
-                              // TODO: Tarifi detaylı görüntüleme
-                            },
+                            onPressed: _navigateToFoodDetail,
                             icon: Icons.restaurant_menu,
                             label: 'Tarifi Gör',
                             color: _currentModeColor,
@@ -1061,6 +1074,18 @@ class _FoodSuggestionViewState extends State<FoodSuggestionView>
     );
   }
 
+  void _navigateToFoodDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FoodDetailView(
+          food: _suggestedFood!,
+          modeColor: _currentModeColor,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFavoriteButton() {
     final userPrefsVM = context.watch<UserPreferencesViewModel>();
     final isFavorite =
@@ -1104,6 +1129,11 @@ class _FoodSuggestionViewState extends State<FoodSuggestionView>
   }
 
   void _suggestFood() {
+    debugPrint('Seçilen değerler:');
+    debugPrint('Environment: $_selectedEnvironment');
+    debugPrint('MealType: $_selectedMealType');
+    debugPrint('Mode: $_selectedMode');
+
     final foodVM = context.read<FoodViewModel>();
     foodVM.filterFoods(
       environment: _selectedEnvironment,
@@ -1113,6 +1143,71 @@ class _FoodSuggestionViewState extends State<FoodSuggestionView>
 
     setState(() {
       _suggestedFood = foodVM.getRandomFood();
+      debugPrint(
+          'Önerilen yemek: ${_suggestedFood?.name ?? "Yemek bulunamadı"}');
+
+      if (_suggestedFood != null) {
+        _animationController.reset();
+        _animationController.forward();
+      }
     });
+  }
+
+  Widget _buildDiceButton() {
+    return Container(
+      width: 48.h,
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: _currentModeColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _currentModeColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showDiceView,
+          borderRadius: BorderRadius.circular(24.r),
+          child: Icon(
+            Icons.casino,
+            color: Colors.white,
+            size: 24.sp,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDiceView() {
+    final foodVM = context.read<FoodViewModel>();
+    foodVM.filterFoods(
+      environment: _selectedEnvironment,
+      mealType: _selectedMealType,
+      mode: _selectedMode,
+    );
+
+    if (foodVM.filteredFoods.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bu kriterlere uygun yemek bulunamadı'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FoodDiceView(
+          selectedFoods: foodVM.filteredFoods,
+          modeColor: _currentModeColor,
+        ),
+      ),
+    );
   }
 }

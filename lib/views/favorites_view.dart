@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:bugun_ne_yiyelim/constants/app_theme.dart';
 import 'package:bugun_ne_yiyelim/viewmodels/user_preferences_viewmodel.dart';
 import 'package:bugun_ne_yiyelim/viewmodels/food_viewmodel.dart';
-import 'package:bugun_ne_yiyelim/models/food.dart';
+import 'package:bugun_ne_yiyelim/views/food_detail_view.dart';
 
 class FavoritesView extends StatelessWidget {
   const FavoritesView({super.key});
@@ -13,16 +13,152 @@ class FavoritesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final userPrefsVM = context.watch<UserPreferencesViewModel>();
     final foodVM = context.watch<FoodViewModel>();
-    final favoriteFoods =
-        foodVM.getFavorites(userPrefsVM.userPreferences?.favoriteFoodIds ?? []);
+    final favoriteFoods = foodVM.getFavoriteFoods(userPrefsVM.favoriteFoodIds);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorilerim'),
+        title: Text(
+          'Favorilerim',
+          style: TextStyle(
+            color: AppTheme.primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: favoriteFoods.isEmpty
           ? _buildEmptyState()
-          : _buildFavoritesList(favoriteFoods),
+          : ListView.builder(
+              padding: EdgeInsets.all(16.w),
+              itemCount: favoriteFoods.length,
+              itemBuilder: (context, index) {
+                final food = favoriteFoods[index];
+                final modeColor =
+                    AppTheme.modeColors[food.mode] ?? AppTheme.primaryColor;
+
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Hero(
+                    tag: 'food_card_${food.id}',
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FoodDetailView(
+                              food: food,
+                              modeColor: modeColor,
+                            ),
+                          ),
+                        ),
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16.r),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white,
+                                modeColor.withOpacity(0.1),
+                              ],
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(16.w),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: modeColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  child: Icon(
+                                    Icons.restaurant,
+                                    size: 40.sp,
+                                    color: modeColor,
+                                  ),
+                                ),
+                                SizedBox(width: 16.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        food.name,
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: modeColor,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        food.description,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.timer,
+                                            size: 16.sp,
+                                            color: modeColor,
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Text(
+                                            '${food.preparationTime} dk',
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              color: modeColor,
+                                            ),
+                                          ),
+                                          SizedBox(width: 16.w),
+                                          Icon(
+                                            Icons.local_fire_department,
+                                            size: 16.sp,
+                                            color: modeColor,
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Text(
+                                            '${food.calories} kcal',
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              color: modeColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.favorite,
+                                      color: AppTheme.errorColor),
+                                  onPressed: () =>
+                                      userPrefsVM.toggleFavorite(food.id),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
@@ -33,92 +169,29 @@ class FavoritesView extends StatelessWidget {
         children: [
           Icon(
             Icons.favorite_border,
-            size: 64.sp,
-            color: AppTheme.textLightColor,
+            size: 80.sp,
+            color: Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
             'Henüz favori yemeğiniz yok',
             style: TextStyle(
-              fontSize: 16.sp,
-              color: AppTheme.textLightColor,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Beğendiğiniz yemekleri favorilere ekleyebilirsiniz',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFavoritesList(List<Food> favorites) {
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: favorites.length,
-      itemBuilder: (context, index) {
-        final food = favorites[index];
-        return Card(
-          margin: EdgeInsets.only(bottom: 16.h),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16.w),
-            title: Text(
-              food.name,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8.h),
-                Text(
-                  food.description,
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.timer,
-                      size: 16.sp,
-                      color: AppTheme.textLightColor,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${food.preparationTime} dakika',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textLightColor,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Icon(
-                      Icons.local_fire_department,
-                      size: 16.sp,
-                      color: AppTheme.textLightColor,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${food.calories} kcal',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textLightColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.favorite, color: AppTheme.errorColor),
-              onPressed: () {
-                context
-                    .read<UserPreferencesViewModel>()
-                    .toggleFavorite(food.id);
-              },
-            ),
-          ),
-        );
-      },
     );
   }
 }
