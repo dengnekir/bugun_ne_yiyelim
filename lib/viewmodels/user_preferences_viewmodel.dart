@@ -5,17 +5,28 @@ import 'package:bugun_ne_yiyelim/models/user_preferences.dart';
 import 'package:bugun_ne_yiyelim/constants/app_constants.dart';
 
 class UserPreferencesViewModel extends ChangeNotifier {
-  late SharedPreferences _prefs;
+  final SharedPreferences _prefs;
+  static const String _favoriteIdsKey = 'favoriteIds';
+  static const String _dailyNotificationsKey = 'dailyNotifications';
+  static const String _specialDayNotificationsKey = 'specialDayNotifications';
+
   UserPreferences? _userPreferences;
   bool _isLoading = true;
-  final Set<String> _favoriteFoodIds = {};
+  Set<String> _favoriteIds = {};
+  bool _dailyNotifications = true;
+  bool _specialDayNotifications = true;
+
+  UserPreferencesViewModel(this._prefs) {
+    _loadPreferences();
+  }
 
   UserPreferences? get userPreferences => _userPreferences;
   bool get isLoading => _isLoading;
-  Set<String> get favoriteFoodIds => _favoriteFoodIds;
+  Set<String> get favoriteIds => _favoriteIds;
+  bool get dailyNotifications => _dailyNotifications;
+  bool get specialDayNotifications => _specialDayNotifications;
 
   Future<void> initialize() async {
-    _prefs = await SharedPreferences.getInstance();
     _loadPreferences();
     _loadFavorites();
   }
@@ -35,6 +46,15 @@ class UserPreferencesViewModel extends ChangeNotifier {
       _savePreferences();
     }
     _isLoading = false;
+
+    final favoriteIdsString = _prefs.getStringList(_favoriteIdsKey);
+    if (favoriteIdsString != null) {
+      _favoriteIds = Set<String>.from(favoriteIdsString);
+    }
+
+    _dailyNotifications = _prefs.getBool(_dailyNotificationsKey) ?? true;
+    _specialDayNotifications =
+        _prefs.getBool(_specialDayNotificationsKey) ?? true;
     notifyListeners();
   }
 
@@ -68,25 +88,37 @@ class UserPreferencesViewModel extends ChangeNotifier {
 
   void _loadFavorites() {
     final favorites = _prefs.getStringList('favorites') ?? [];
-    _favoriteFoodIds.addAll(favorites);
+    _favoriteIds.addAll(favorites);
     notifyListeners();
   }
 
   void _saveFavorites() {
-    _prefs.setStringList('favorites', _favoriteFoodIds.toList());
+    _prefs.setStringList('favorites', _favoriteIds.toList());
   }
 
   bool isFavorite(String foodId) {
-    return _favoriteFoodIds.contains(foodId);
+    return _favoriteIds.contains(foodId);
   }
 
-  void toggleFavorite(String foodId) {
-    if (_favoriteFoodIds.contains(foodId)) {
-      _favoriteFoodIds.remove(foodId);
+  Future<void> toggleFavorite(String foodId) async {
+    if (_favoriteIds.contains(foodId)) {
+      _favoriteIds.remove(foodId);
     } else {
-      _favoriteFoodIds.add(foodId);
+      _favoriteIds.add(foodId);
     }
-    _saveFavorites();
+    await _prefs.setStringList(_favoriteIdsKey, _favoriteIds.toList());
+    notifyListeners();
+  }
+
+  Future<void> updateDailyNotifications(bool value) async {
+    _dailyNotifications = value;
+    await _prefs.setBool(_dailyNotificationsKey, value);
+    notifyListeners();
+  }
+
+  Future<void> updateSpecialDayNotifications(bool value) async {
+    _specialDayNotifications = value;
+    await _prefs.setBool(_specialDayNotificationsKey, value);
     notifyListeners();
   }
 }

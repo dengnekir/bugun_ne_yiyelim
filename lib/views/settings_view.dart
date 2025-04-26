@@ -1,121 +1,445 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:bugun_ne_yiyelim/constants/app_theme.dart';
+import 'package:bugun_ne_yiyelim/viewmodels/theme_viewmodel.dart';
 import 'package:bugun_ne_yiyelim/viewmodels/user_preferences_viewmodel.dart';
+import 'package:bugun_ne_yiyelim/constants/app_theme.dart';
+import 'package:bugun_ne_yiyelim/constants/app_constants.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final userPrefsVM = context.watch<UserPreferencesViewModel>();
+  State<SettingsView> createState() => _SettingsViewState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ayarlar'),
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16.w),
-        children: [
-          _buildNotificationSettings(context, userPrefsVM),
-          SizedBox(height: 16.h),
-          _buildAboutSection(),
-        ],
-      ),
-    );
+class _SettingsViewState extends State<SettingsView> {
+  String _appVersion = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
   }
 
-  Widget _buildNotificationSettings(
-    BuildContext context,
-    UserPreferencesViewModel userPrefsVM,
-  ) {
-    return Card(
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = packageInfo.version;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeVM = context.watch<ThemeViewModel>();
+    final userPrefsVM = context.watch<UserPreferencesViewModel>();
+
+    return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Bildirimler',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            SwitchListTile(
-              title: Text(
-                'Günlük Yemek Önerileri',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-              subtitle: Text(
-                'Her gün yeni bir yemek önerisi al',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppTheme.textLightColor,
-                ),
-              ),
-              value: userPrefsVM.userPreferences?.notificationsEnabled ?? false,
-              onChanged: (bool value) {
-                userPrefsVM.updatePreferences(notifications: value);
-              },
-            ),
+            _buildSectionTitle('Tema Ayarları', themeVM.currentModeColor),
+            SizedBox(height: 8.h),
+            _buildThemeSettings(themeVM),
+            SizedBox(height: 24.h),
+            _buildSectionTitle('Bildirim Ayarları', themeVM.currentModeColor),
+            SizedBox(height: 8.h),
+            _buildNotificationSettings(userPrefsVM),
+            SizedBox(height: 24.h),
+            _buildSectionTitle('Uygulama Hakkında', themeVM.currentModeColor),
+            SizedBox(height: 8.h),
+            _buildAboutSection(themeVM.currentModeColor),
+            SizedBox(height: 24.h),
+            _buildSectionTitle('İletişim', themeVM.currentModeColor),
+            SizedBox(height: 8.h),
+            _buildContactSection(themeVM.currentModeColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAboutSection() {
+  Widget _buildSectionTitle(String title, Color currentModeColor) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 20.sp,
+        fontWeight: FontWeight.bold,
+        color: currentModeColor,
+      ),
+    );
+  }
+
+  Widget _buildThemeSettings(ThemeViewModel themeVM) {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: [
+          _buildModeOption(
+            AppConstants.modeNormal,
+            'Normal Mod',
+            Icons.restaurant_menu,
+            AppTheme.modeColors[AppConstants.modeNormal]!,
+            themeVM,
+          ),
+          _buildDivider(),
+          _buildModeOption(
+            AppConstants.modeSports,
+            'Spor Modu',
+            Icons.fitness_center,
+            AppTheme.modeColors[AppConstants.modeSports]!,
+            themeVM,
+          ),
+          _buildDivider(),
+          _buildModeOption(
+            AppConstants.modeDiet,
+            'Diyet Modu',
+            Icons.spa,
+            AppTheme.modeColors[AppConstants.modeDiet]!,
+            themeVM,
+          ),
+          _buildDivider(),
+          _buildModeOption(
+            AppConstants.modeCulture,
+            'Kültür Modu',
+            Icons.public,
+            AppTheme.modeColors[AppConstants.modeCulture]!,
+            themeVM,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeOption(
+    String mode,
+    String label,
+    IconData icon,
+    Color color,
+    ThemeViewModel themeVM,
+  ) {
+    final isSelected = themeVM.currentMode == mode;
+    return InkWell(
+      onTap: () => themeVM.updateMode(mode),
       child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        child: Row(
           children: [
-            Text(
-              'Hakkında',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
               ),
+              child: Icon(icon, color: color),
             ),
-            SizedBox(height: 16.h),
-            ListTile(
-              title: Text(
-                'Uygulama Versiyonu',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-              trailing: Text(
-                '1.0.0',
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Text(
+                label,
                 style: TextStyle(
                   fontSize: 16.sp,
-                  color: AppTheme.textLightColor,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? color : Colors.grey[700],
                 ),
               ),
             ),
-            ListTile(
-              title: Text(
-                'Gizlilik Politikası',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                // TODO: Gizlilik politikası sayfasına yönlendir
-              },
+            if (isSelected) Icon(Icons.check_circle, color: color),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationSettings(UserPreferencesViewModel userPrefsVM) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: [
+          _buildSwitchTile(
+            'Günlük Öneriler',
+            'Her gün yeni yemek önerileri al',
+            userPrefsVM.dailyNotifications,
+            (value) => userPrefsVM.updateDailyNotifications(value),
+          ),
+          _buildDivider(),
+          _buildSwitchTile(
+            'Özel Günler',
+            'Özel günlerde özel tarifler al',
+            userPrefsVM.specialDayNotifications,
+            (value) => userPrefsVM.updateSpecialDayNotifications(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSwitchTile(
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    return SwitchListTile(
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 12.sp,
+          color: Colors.grey[600],
+        ),
+      ),
+      value: value,
+      onChanged: onChanged,
+      activeColor: AppTheme.primaryColor,
+    );
+  }
+
+  Widget _buildAboutSection(Color currentModeColor) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: [
+          _buildInfoTile(
+            'Uygulama Versiyonu',
+            _isLoading ? 'Yükleniyor...' : _appVersion,
+            Icons.info_outline,
+            currentModeColor,
+          ),
+          _buildDivider(),
+          _buildActionTile(
+            'Lisans Bilgileri',
+            'Açık kaynak lisanslarını görüntüle',
+            Icons.description_outlined,
+            currentModeColor,
+            () => showLicensePage(context: context),
+          ),
+          _buildDivider(),
+          _buildActionTile(
+            'Gizlilik Politikası',
+            'Gizlilik politikamızı inceleyin',
+            Icons.privacy_tip_outlined,
+            currentModeColor,
+            () => _launchURL('https://example.com/privacy'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactSection(Color currentModeColor) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: [
+          _buildActionTile(
+            'Geri Bildirim',
+            'Görüşlerinizi bizimle paylaşın',
+            Icons.feedback_outlined,
+            currentModeColor,
+            () => _launchURL('mailto:feedback@example.com'),
+          ),
+          _buildDivider(),
+          _buildActionTile(
+            'Bizi Değerlendirin',
+            'Play Store\'da puanlayın',
+            Icons.star_outline,
+            currentModeColor,
+            () => _launchURL('market://details?id=com.example.app'),
+          ),
+          _buildDivider(),
+          _buildActionTile(
+            'Sosyal Medya',
+            'Bizi sosyal medyada takip edin',
+            Icons.public,
+            currentModeColor,
+            () => _showSocialMediaDialog(currentModeColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color currentModeColor,
+  ) {
+    return ListTile(
+      leading: Container(
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: currentModeColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Icon(icon, color: currentModeColor),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 12.sp,
+          color: Colors.grey[600],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color currentModeColor,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: ListTile(
+        leading: Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: currentModeColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(icon, color: currentModeColor),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: Colors.grey[600],
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16.sp,
+          color: Colors.grey[400],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: Colors.grey[200],
+    );
+  }
+
+  Future<void> _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    }
+  }
+
+  void _showSocialMediaDialog(Color currentModeColor) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Sosyal Medya',
+          style: TextStyle(
+            color: currentModeColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSocialMediaButton(
+              'Instagram',
+              Icons.camera_alt,
+              currentModeColor,
+              () => _launchURL('https://instagram.com/example'),
             ),
-            ListTile(
-              title: Text(
-                'Kullanım Koşulları',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                // TODO: Kullanım koşulları sayfasına yönlendir
-              },
+            SizedBox(height: 8.h),
+            _buildSocialMediaButton(
+              'Twitter',
+              Icons.flutter_dash,
+              currentModeColor,
+              () => _launchURL('https://twitter.com/example'),
+            ),
+            SizedBox(height: 8.h),
+            _buildSocialMediaButton(
+              'Facebook',
+              Icons.facebook,
+              currentModeColor,
+              () => _launchURL('https://facebook.com/example'),
             ),
           ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialMediaButton(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              SizedBox(width: 16.w),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
