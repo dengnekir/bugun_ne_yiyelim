@@ -7,6 +7,7 @@ import 'package:bugun_ne_yiyelim/constants/app_theme.dart';
 import 'package:bugun_ne_yiyelim/constants/app_constants.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -228,20 +229,13 @@ class _SettingsViewState extends State<SettingsView> {
             currentModeColor,
           ),
           _buildDivider(),
-          _buildActionTile(
-            'Lisans Bilgileri',
-            'Açık kaynak lisanslarını görüntüle',
-            Icons.description_outlined,
-            currentModeColor,
-            () => showLicensePage(context: context),
-          ),
           _buildDivider(),
           _buildActionTile(
             'Gizlilik Politikası',
             'Gizlilik politikamızı inceleyin',
-            Icons.privacy_tip_outlined,
+            FontAwesomeIcons.shield,
             currentModeColor,
-            () => _launchURL('https://example.com/privacy'),
+            () => _launchURL('https://dengnekir.com/'),
           ),
         ],
       ),
@@ -259,9 +253,9 @@ class _SettingsViewState extends State<SettingsView> {
           _buildActionTile(
             'Geri Bildirim',
             'Görüşlerinizi bizimle paylaşın',
-            Icons.feedback_outlined,
+            FontAwesomeIcons.envelope,
             currentModeColor,
-            () => _launchURL('mailto:feedback@example.com'),
+            () => _launchURL('mailto:usluferhat98@gmail.com'),
           ),
           _buildDivider(),
           _buildActionTile(
@@ -366,8 +360,9 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Future<void> _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('URL açılamadı: $url');
     }
   }
 
@@ -386,24 +381,25 @@ class _SettingsViewState extends State<SettingsView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildSocialMediaButton(
-              'Instagram',
-              Icons.camera_alt,
+              'LinkedIn',
+              FontAwesomeIcons.linkedin,
               currentModeColor,
-              () => _launchURL('https://instagram.com/example'),
+              () => _launchURL('https://linkedin.com/in/ferhat-uslu'),
             ),
             SizedBox(height: 8.h),
             _buildSocialMediaButton(
-              'Twitter',
-              Icons.flutter_dash,
+              'Web Sitemiz',
+              FontAwesomeIcons.globe,
               currentModeColor,
-              () => _launchURL('https://twitter.com/example'),
+              () => _launchURL('https://dengnekir.com'),
             ),
             SizedBox(height: 8.h),
             _buildSocialMediaButton(
-              'Facebook',
-              Icons.facebook,
+              'Diğer Uygulamalarımız',
+              FontAwesomeIcons.mobileScreen,
               currentModeColor,
-              () => _launchURL('https://facebook.com/example'),
+              () => _launchURL(
+                  'https://play.google.com/store/apps/developer?id=Dengnekir'),
             ),
           ],
         ),
